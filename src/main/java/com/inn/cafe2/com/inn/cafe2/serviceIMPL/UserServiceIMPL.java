@@ -1,12 +1,14 @@
 package com.inn.cafe2.com.inn.cafe2.serviceIMPL;
 
 import com.inn.cafe2.com.inn.cafe2.JWT.CustumerUserDetailsService;
+import com.inn.cafe2.com.inn.cafe2.JWT.JwtFilter;
 import com.inn.cafe2.com.inn.cafe2.JWT.JwtUtil;
 import com.inn.cafe2.com.inn.cafe2.constents.CafeConstants;
 import com.inn.cafe2.com.inn.cafe2.dao.UserDAO;
 import com.inn.cafe2.com.inn.cafe2.models.User;
 import com.inn.cafe2.com.inn.cafe2.service.UserService;
 import com.inn.cafe2.com.inn.cafe2.utils.CafeUtils;
+import com.inn.cafe2.com.inn.cafe2.wrapper.UserWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,8 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j //for logging purpose
 @Service
@@ -32,6 +33,8 @@ public class UserServiceIMPL implements UserService {
     CustumerUserDetailsService custumerUserDetailsService;
     @Autowired
     JwtUtil jwtUtil;
+    @Autowired
+    JwtFilter jwtFilter;
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestMap) {
         log.info("inside signup {}",requestMap);
@@ -98,6 +101,54 @@ public class UserServiceIMPL implements UserService {
 
         return new ResponseEntity<String>("{\"message\" :\""+"Bad Credentiel"+"\"}",HttpStatus.BAD_REQUEST);
 
+    }
+
+    @Override
+    public ResponseEntity<List<UserWrapper>> getAllUser() {
+        try {
+            if(jwtFilter.isAdmin())
+            {
+                return new ResponseEntity<>(userDAO.getAllUser(),HttpStatus.OK);
+
+            }else {
+
+
+                return new ResponseEntity<>(new ArrayList<>(),HttpStatus.UNAUTHORIZED);
+            }
+
+        }catch (Exception ex)
+        {ex.printStackTrace();}
+        return new ResponseEntity<>(new ArrayList<>(),HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> update(Map<String, String> requestMap) {
+        try{
+            //check admin
+            if(jwtFilter.isAdmin())
+            {
+                //search the user exist in our data base or no
+                Optional<User> optionalUser=userDAO.findById(Integer.parseInt(requestMap.get("id")));
+                if(!optionalUser.isEmpty())
+                {
+                    userDAO.updateStatus(requestMap.get("status"),Integer.parseInt(requestMap.get("id")));
+                    return CafeUtils.getResponseEntity("User status updated succesfully",HttpStatus.OK);
+                }
+                else {
+                    return CafeUtils.getResponseEntity("User id doesn't exist",HttpStatus.OK);
+
+
+                }
+
+
+            }
+            else {
+                return CafeUtils.getResponseEntity(CafeConstants.UNAUTHORIZED_ACCESS,HttpStatus.UNAUTHORIZED);
+            }
+
+        }catch (Exception ex)
+        {ex.printStackTrace();}
+        return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG,HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private boolean validateSignUpMap(Map<String, String> requestMap)
