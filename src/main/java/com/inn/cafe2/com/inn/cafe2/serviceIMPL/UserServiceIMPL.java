@@ -8,6 +8,7 @@ import com.inn.cafe2.com.inn.cafe2.dao.UserDAO;
 import com.inn.cafe2.com.inn.cafe2.models.User;
 import com.inn.cafe2.com.inn.cafe2.service.UserService;
 import com.inn.cafe2.com.inn.cafe2.utils.CafeUtils;
+import com.inn.cafe2.com.inn.cafe2.utils.EmailUtils;
 import com.inn.cafe2.com.inn.cafe2.wrapper.UserWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ public class UserServiceIMPL implements UserService {
     JwtUtil jwtUtil;
     @Autowired
     JwtFilter jwtFilter;
+    @Autowired
+    EmailUtils emailUtils;
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestMap) {
         log.info("inside signup {}",requestMap);
@@ -132,6 +135,9 @@ public class UserServiceIMPL implements UserService {
                 if(!optionalUser.isEmpty())
                 {
                     userDAO.updateStatus(requestMap.get("status"),Integer.parseInt(requestMap.get("id")));
+                    //log.info(optionalUser.get().getEmail());
+                    //sending email
+                    sendMailToAllAdmin(requestMap.get("status"),optionalUser.get().getEmail(),userDAO.getAllAdmin());
                     return CafeUtils.getResponseEntity("User status updated succesfully",HttpStatus.OK);
                 }
                 else {
@@ -149,6 +155,21 @@ public class UserServiceIMPL implements UserService {
         }catch (Exception ex)
         {ex.printStackTrace();}
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private void sendMailToAllAdmin(String status, String user, List<String> allAdmin) {
+        allAdmin.remove(jwtFilter.getCurrentUser());
+        if(status != null && status.equalsIgnoreCase("true"))
+        {
+
+            //send enable message
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(),"Account Approved","USER:-"+user+"\n is approved by \nADMIN:-"+jwtFilter.getCurrentUser(),allAdmin);
+        }
+        else {
+
+            //send the disabled message
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(),"Account Disable","USER:-"+user+"\n is disabled by \nADMIN:-"+jwtFilter.getCurrentUser(),allAdmin);
+        }
     }
 
     private boolean validateSignUpMap(Map<String, String> requestMap)
