@@ -8,4 +8,6 @@ export class GlobalConstants{
   //Variable
   public static error:string ="error";
 
+  public static unauthorized:string ="You are nnot authorized to access this page";
+
 }
