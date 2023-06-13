@@ -47,6 +47,7 @@ responseMessage:any;
       this.router.navigate(['/cafe/dashboard'])
 
     },(error)=>{
+      this.ngxService.stop();
       if(error.error?.message)
       {
 

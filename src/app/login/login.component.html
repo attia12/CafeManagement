@@ -13,7 +13,7 @@
       <mat-form-field appearance="standard" fxFlex>
         <mat-label>Email</mat-label>
         <input matInput formControlName="email" required>
-        <mat-error *ngIf="loginFrom.controls.email.touch &&loginFrom.controls.email.invalid">
+        <mat-error *ngIf="loginFrom.controls.email.touched &&loginFrom.controls.email.invalid">
 
           <span *ngIf="loginFrom.controls.email.errors.required">This field is mandatory </span>
           <span *ngIf="loginFrom.controls.email.errors.pattern">This field is invalid </span>
@@ -30,7 +30,7 @@
           <mat-icon>{{hide ? 'visibility_off' : 'visibility'}}</mat-icon>
 
         </button>
-        <mat-error *ngIf="loginFrom.controls.password.touch &&loginFrom.controls.password.invalid">
+        <mat-error *ngIf="loginFrom.controls.password.touched &&loginFrom.controls.password.invalid">
 
           <span *ngIf="loginFrom.controls.password.errors.required">This field is mandatory </span>
 
